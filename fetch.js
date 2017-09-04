@@ -459,6 +459,18 @@
         xhr.setRequestHeader(name, value)
       })
 
+      // polyfill abort https://developer.mozilla.org/en-US/docs/Web/API/FetchSignal
+      var signal = init && init.signal
+      if (signal && signal.addEventListener) {
+        signal.addEventListener("abort", function() {
+          if (xhr.readyState === 4) {
+            throw new Error('Can not abort a completed fetch request')
+          }
+          xhr.abort()
+          reject(new Error('Request Aborted'))
+        }, {once: true})
+      }
+
       xhr.send(typeof request._bodyInit === 'undefined' ? null : request._bodyInit)
     })
   }
